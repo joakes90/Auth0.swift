@@ -168,6 +168,9 @@ public struct CredentialsManager {
 
 extension CredentialsManager {
     func migrateKeychain(from oldKeychain: A0SimpleKeychain, to newKeychain: A0SimpleKeychain) {
-        
+        if let credentials = oldKeychain.data(forKey: storeKey) {
+            newKeychain.setData(credentials, forKey: storeKey)
+            oldKeychain.deleteEntry(forKey: storeKey)
+        }
     }
 }
