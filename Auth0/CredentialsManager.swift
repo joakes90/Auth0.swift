@@ -29,7 +29,7 @@ import LocalAuthentication
 /// Credentials management utility
 public struct CredentialsManager {
 
-    private let storage = A0SimpleKeychain()
+    private let storage: A0SimpleKeychain
     private let storeKey: String
     private let authentication: Authentication
     #if os(iOS)
@@ -41,9 +41,10 @@ public struct CredentialsManager {
     /// - Parameters:
     ///   - authentication: Auth0 authentication instance
     ///   - storeKey: Key used to store user credentials in the keychain, defaults to "credentials"
-    public init(authentication: Authentication, storeKey: String = "credentials") {
+    public init(authentication: Authentication, storeKey: String = "credentials", storage: A0SimpleKeychain = A0SimpleKeychain()) {
         self.storeKey = storeKey
         self.authentication = authentication
+        self.storage = storage
     }
 
     /// Enable Touch ID Authentication for additional security during credentials retrieval.
@@ -161,6 +162,15 @@ public struct CredentialsManager {
             case .failure(let error):
                 callback(.failedRefresh(error), nil)
             }
+        }
+    }
+}
+
+extension CredentialsManager {
+    func migrateKeychain(from oldKeychain: A0SimpleKeychain, to newKeychain: A0SimpleKeychain) {
+        if let credentials = oldKeychain.data(forKey: storeKey) {
+            newKeychain.setData(credentials, forKey: storeKey)
+            oldKeychain.deleteEntry(forKey: storeKey)
         }
     }
 }
